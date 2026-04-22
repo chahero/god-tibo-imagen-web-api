@@ -1,0 +1,48 @@
+{
+  "name": "god-tibo-imagen",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Node.js library and CLI for Codex private ChatGPT-authenticated image generation",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./types/index.d.ts",
+  "bin": {
+    "god-tibo-imagen": "./src/cli/generate.js"
+  },
+  "files": [
+    "src/",
+    "types/",
+    "VERSION"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check.js",
+    "build": "npm run check && npm run build:types",
+    "build:types": "tsc --project tsconfig.types.json",
+    "generate": "node src/cli/generate.js",
+    "smoke:live": "bash scripts/smoke-live.sh",
+    "sync-version": "node scripts/sync-version.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "codex",
+    "image-generation",
+    "chatgpt",
+    "openai",
+    "cli"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

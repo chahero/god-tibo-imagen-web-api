@@ -1,0 +1,118 @@
+# god-tibo-imagen
+
+Node.js library and CLI for sending image-generation requests to Codex's private ChatGPT-authenticated backend path.
+
+> WARNING: This is **not** a supported public API integration. It depends on private Codex request behavior that may change without notice.
+
+## What it does
+
+- Reuses local Codex ChatGPT auth from `~/.codex/auth.json`
+- Reads `~/.codex/installation_id` when available
+- Sends a `POST` request to `https://chatgpt.com/backend-api/codex/responses`
+- Requests the built-in `image_generation` tool with `output_format: png`
+- Parses streamed SSE output and saves the resulting PNG
+- Supports dry-run and sanitized debug dumps with request/response metadata minimization
+- Also supports a `codex exec` fallback provider that verifies real PNG output from `~/.codex/generated_images/`
+
+## Requirements
+
+- Node.js 20+
+- Existing local Codex ChatGPT login state
+- A Codex/ChatGPT account that is entitled to image generation on the private backend
+
+## Installation
+
+```bash
+npm install -g god-tibo-imagen
+```
+
+## CLI Usage
+
+```bash
+npm test
+npm run check
+god-tibo-imagen --prompt "flat blue square icon" --output ./out/blue-square.png
+```
+
+### Provider modes
+
+```bash
+# direct private HTTP path
+god-tibo-imagen --provider private-codex --prompt "flat blue square icon" --output ./out.png
+
+# borrow the Hermes-style codex exec workaround
+god-tibo-imagen --provider codex-cli --prompt "flat blue square icon" --output ./out.png
+
+# try private HTTP first, then fall back to codex-cli
+god-tibo-imagen --provider auto --prompt "flat blue square icon" --output ./out.png
+```
+
+### Dry run
+
+```bash
+god-tibo-imagen --prompt "flat blue square icon" --dry-run
+```
+
+### Live smoke test
+
+```bash
+npm run smoke:live -- "Generate a tiny flat blue square icon." ./smoke-output.png
+```
+
+## Programmatic API (Node.js)
+
+```javascript
+import { createProvider, resolveConfig, loadCodexSession, validateCodexSession } from 'god-tibo-imagen';
+
+const config = resolveConfig({ provider: 'private-codex' });
+const provider = createProvider(config);
+
+const result = await provider.generateImage({
+  prompt: 'flat blue square icon',
+  model: 'gpt-5.4',
+  outputPath: './out.png',
+  dryRun: false,
+  debug: false
+});
+
+console.log(result.savedPath);
+```
+
+## Python SDK
+
+```python
+from god_tibo_imagen import Client
+
+client = Client(provider="private-codex")
+result = client.generate_image(
+    prompt="flat blue square icon",
+    model="gpt-5.4",
+    output_path="./out.png"
+)
+print(result.saved_path)
+```
+
+Install the Python SDK with:
+
+```bash
+pip install god-tibo-imagen
+```
+
+## Key files
+
+- `src/auth/loadCodexSession.js` — reads Codex auth state
+- `src/auth/validateSession.js` — validates required private-backend fields
+- `src/codex/buildResponsesRequest.js` — builds the `/responses` request
+- `src/codex/streamResponsesSse.js` — parses SSE events
+- `src/codex/extractImageGeneration.js` — finds `image_generation_call`
+- `src/providers/privateCodexProvider.js` — live request/response orchestration
+- `src/providers/codexCliProvider.js` — Hermes-style `codex exec` fallback with file verification
+- `src/providers/createProvider.js` — provider selection and auto fallback
+- `src/cli/generate.js` — CLI entry point
+
+## Notes
+
+- This MVP supports the file-backed `~/.codex/auth.json` path.
+- If your Codex install stores auth only in a keyring and does not materialize `auth.json`, this MVP will not discover it yet.
+- Debug dumps redact bearer tokens, account/session identifiers, installation IDs, cookies, and image payload base64, and store a minimized response summary instead of the raw response body.
+- The architecture now supports both the direct private HTTP client and a Hermes-style `codex exec` fallback, while keeping the provider seam open for future `app-server` integration.
