@@ -44,6 +44,45 @@ test('private provider saves PNG from successful SSE response', async () => {
   assert.equal(result.response.status, 200);
 });
 
+test('private provider forwards image data URL to request builder', async () => {
+  const dir = await makeTempDir();
+  const fixture = await writeAuthFixture(dir);
+  const outputPath = path.join(dir, 'out.png');
+  const successSse = await fs.readFile(path.join(fixturesDir.pathname, 'success.sse'), 'utf8');
+  const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlAbwAAAABJRU5ErkJggg==';
+
+  const provider = createPrivateCodexProvider({
+    baseUrl: 'https://chatgpt.com/backend-api/codex',
+    authFile: fixture.authPath,
+    installationIdFile: fixture.installationIdPath,
+    defaultOriginator: 'codex_cli_rs'
+  });
+
+  const result = await provider.generateImage({
+    prompt: 'make a blue square',
+    model: 'gpt-5.4',
+    outputPath,
+    image: imageDataUrl,
+    fetchImpl: async (_url, options) => {
+      const body = JSON.parse(options.body);
+      assert.equal(body.input[0].content.length, 2);
+      assert.equal(body.input[0].content[1].type, 'input_image');
+      assert.equal(body.input[0].content[1].image_url, imageDataUrl);
+      return createFetchResponse({
+        ok: true,
+        status: 200,
+        body: successSse,
+        headers: {
+          'content-type': 'text/event-stream',
+          'x-oai-request-id': 'req-789'
+        }
+      });
+    }
+  });
+
+  assert.equal(result.savedPath, outputPath);
+});
+
 test('private provider redacts secrets in debug dumps', async () => {
   const dir = await makeTempDir();
   const fixture = await writeAuthFixture(dir);

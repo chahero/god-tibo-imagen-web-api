@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildResponsesRequest, sanitizeHeaders } from '../src/codex/buildResponsesRequest.js';
+import { buildResponsesRequest, sanitizeHeaders, sanitizeRequestBody } from '../src/codex/buildResponsesRequest.js';
 
 test('buildResponsesRequest emits expected private Codex request', () => {
   const request = buildResponsesRequest({
@@ -36,4 +36,45 @@ test('buildResponsesRequest emits expected private Codex request', () => {
   assert.deepEqual(request.sanitized.body.client_metadata, {
     'x-codex-installation-id': '[REDACTED_INSTALLATION_ID]'
   });
+});
+
+test('buildResponsesRequest appends input_image when image is provided', () => {
+  const request = buildResponsesRequest({
+    baseUrl: 'https://chatgpt.com/backend-api/codex',
+    session: {
+      accessToken: 'abc123',
+      accountId: 'acct-123',
+      installationId: null
+    },
+    prompt: 'make a blue square',
+    model: 'gpt-5.4',
+    originator: 'codex_cli_rs',
+    image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlAbwAAAABJRU5ErkJggg=='
+  });
+
+  const content = request.body.input[0].content;
+  assert.equal(content.length, 2);
+  assert.equal(content[0].type, 'input_text');
+  assert.equal(content[0].text, 'make a blue square');
+  assert.equal(content[1].type, 'input_image');
+  assert.equal(content[1].image_url, 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlAbwAAAABJRU5ErkJggg==');
+});
+
+test('sanitizeRequestBody redacts input_image.image_url', () => {
+  const body = {
+    input: [
+      {
+        type: 'message',
+        role: 'user',
+        content: [
+          { type: 'input_text', text: 'hello' },
+          { type: 'input_image', image_url: 'data:image/png;base64,secret' }
+        ]
+      }
+    ]
+  };
+
+  const sanitized = sanitizeRequestBody(body);
+  assert.equal(sanitized.input[0].content[1].image_url, '[REDACTED_IMAGE_DATA]');
+  assert.equal(sanitized.input[0].content[0].text, 'hello');
 });

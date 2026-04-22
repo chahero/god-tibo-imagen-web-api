@@ -90,3 +90,19 @@ test('codex-cli provider writes debug summary without raw image payloads', async
   assert.match(dump.warnings[0], /sandbox\/bwrap/);
   assert.equal(dump.command.args.at(-1), '[PROMPT_REDACTED]');
 });
+
+test('codex-cli provider throws when image is provided', async () => {
+  const dir = await makeTempDir();
+  const generatedImagesDir = path.join(dir, 'generated_images');
+  const provider = createCodexCliProvider({ generatedImagesDir });
+
+  await assert.rejects(
+    async () =>
+      provider.generateImage({
+        prompt: 'red square',
+        outputPath: path.join(dir, 'out.png'),
+        image: 'data:image/png;base64,abc123'
+      }),
+    /does not support image input/
+  );
+});
