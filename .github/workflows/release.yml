@@ -34,7 +34,7 @@ jobs:
           tag_version="${GITHUB_REF_NAME#v}"
           package_version="$(node -p "require('./package.json').version")"
           version_file="$(tr -d '[:space:]' < VERSION)"
-          pyproject_version="$(python -c "from pathlib import Path; import tomllib; data = tomllib.loads(Path('python/pyproject.toml').read_text(encoding='utf-8')); version = data.get('project', {}).get('version') or data.get('tool', {}).get('poetry', {}).get('version'); raise SystemExit('Could not determine version from python/pyproject.toml') if not version else print(version)")"
+          pyproject_version="$(grep '^version = ' python/pyproject.toml | head -n1 | cut -d'"' -f2)"
 
           if [[ "$package_version" != "$tag_version" ]]; then
             echo "package.json version ($package_version) does not match tag version ($tag_version)" >&2
