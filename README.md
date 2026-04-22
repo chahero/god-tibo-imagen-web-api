@@ -20,11 +20,49 @@ Node.js library and CLI for sending image-generation requests to Codex's private
 - Existing local Codex ChatGPT login state
 - A Codex/ChatGPT account that is entitled to image generation on the private backend
 
-## Installation
+## Installation Guide
+
+### Prerequisites
+
+- **Node.js 20+** (for CLI and Node.js library)
+- **Python 3.10+** (for Python SDK)
+- Existing local Codex ChatGPT login state (`~/.codex/auth.json`)
+- A Codex/ChatGPT account entitled to image generation on the private backend
+
+### CLI (global)
 
 ```bash
 npm install -g god-tibo-imagen
 ```
+
+After installation, the `gti` command is available globally:
+
+```bash
+gti --version
+gti --help
+```
+
+### Node.js Library
+
+```bash
+npm install god-tibo-imagen
+```
+
+```javascript
+import { createProvider, resolveConfig } from 'god-tibo-imagen';
+```
+
+### Python SDK
+
+```bash
+pip install god-tibo-imagen
+```
+
+```python
+from gti import Client
+```
+
+---
 
 ## CLI Usage
 
@@ -92,10 +130,45 @@ result = client.generate_image(
 print(result.saved_path)
 ```
 
-Install the Python SDK with:
+
+
+## Quick Start
+
+### 1. Generate an image via CLI
 
 ```bash
-pip install gti
+gti --prompt "flat blue square icon" --output ./out.png
+```
+
+### 2. Use in a Node.js script
+
+```javascript
+import { createProvider, resolveConfig } from 'god-tibo-imagen';
+
+const config = resolveConfig({ provider: 'private-codex' });
+const provider = createProvider(config);
+
+const result = await provider.generateImage({
+  prompt: 'flat blue square icon',
+  model: 'gpt-5.4',
+  outputPath: './out.png',
+});
+
+console.log(result.savedPath);
+```
+
+### 3. Use in a Python script
+
+```python
+from gti import Client
+
+client = Client(provider="private-codex")
+result = client.generate_image(
+    prompt="flat blue square icon",
+    model="gpt-5.4",
+    output_path="./out.png"
+)
+print(result.saved_path)
 ```
 
 ## Key files
