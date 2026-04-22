@@ -1,0 +1,12 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_partial_1"}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ig_partial_1","type":"image_generation_call","status":"in_progress"},"output_index":0}
+
+event: response.image_generation_call.partial_image
+data: {"type":"response.image_generation_call.partial_image","item_id":"ig_partial_1","partial_image_b64":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlAbwAAAABJRU5ErkJggg==","revised_prompt":"tiny blue square"}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_partial_1"}}
+
