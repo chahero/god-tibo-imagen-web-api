@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/saint-tibo.png" alt="Saint Tibo" width="600">
+</p>
+
 # god-tibo-imagen
 
 Node.js library and CLI for sending image-generation requests to Codex's private ChatGPT-authenticated backend path.
