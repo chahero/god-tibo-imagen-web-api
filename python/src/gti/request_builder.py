@@ -9,6 +9,7 @@ from .errors import make_error
 REDACTED_ACCOUNT_ID = "[REDACTED_ACCOUNT_ID]"
 REDACTED_SESSION_ID = "[REDACTED_SESSION_ID]"
 REDACTED_INSTALLATION_ID = "[REDACTED_INSTALLATION_ID]"
+REDACTED_IMAGE_URL = "[REDACTED_IMAGE_URL]"
 
 
 def sanitize_headers(headers: dict[str, Any]) -> dict[str, Any]:
@@ -23,11 +24,17 @@ def sanitize_headers(headers: dict[str, Any]) -> dict[str, Any]:
 
 
 def sanitize_request_body(body: dict[str, Any]) -> dict[str, Any]:
-    if not body.get("client_metadata"):
-        return body
-
     cloned = deepcopy(body)
-    cloned["client_metadata"]["x-codex-installation-id"] = REDACTED_INSTALLATION_ID
+    if cloned.get("client_metadata"):
+        cloned["client_metadata"]["x-codex-installation-id"] = REDACTED_INSTALLATION_ID
+
+    for msg in cloned.get("input", []):
+        if not isinstance(msg, dict):
+            continue
+        for item in msg.get("content", []):
+            if isinstance(item, dict) and item.get("type") == "input_image" and "image_url" in item:
+                item["image_url"] = REDACTED_IMAGE_URL
+
     return cloned
 
 
@@ -40,6 +47,7 @@ def build_responses_request(
     originator: str,
     include_reasoning: bool = True,
     session_id: str | None = None,
+    image: str | None = None,
 ) -> dict[str, Any]:
     if not prompt or not prompt.strip():
         raise make_error("Prompt is required.")
@@ -57,6 +65,10 @@ def build_responses_request(
         "session_id": session_id,
     }
 
+    content: list[dict[str, Any]] = [{"type": "input_text", "text": prompt}]
+    if image is not None:
+        content.append({"type": "input_image", "image_url": image})
+
     body = {
         "model": model,
         "instructions": "",
@@ -64,7 +76,7 @@ def build_responses_request(
             {
                 "type": "message",
                 "role": "user",
-                "content": [{"type": "input_text", "text": prompt}],
+                "content": content,
             }
         ],
         "tools": [{"type": "image_generation", "output_format": "png"}],

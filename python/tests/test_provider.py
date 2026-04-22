@@ -132,3 +132,37 @@ def test_provider_rethrows_malformed_sse(tmp_path):
         )
     error = cast(CodexError, exc_info.value)
     assert error.code == "MALFORMED_SSE_JSON"
+
+
+def test_provider_forwards_image_to_request_body(tmp_path):
+    auth_file, installation_file = _write_auth_state(tmp_path)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        content = body["input"][0]["content"]
+        assert len(content) == 2
+        assert content[1]["type"] == "input_image"
+        assert content[1]["image_url"] == "data:image/png;base64,abc123"
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text=fixture_text("success.sse"),
+        )
+
+    provider = create_private_codex_provider(
+        {
+            "authFile": str(auth_file),
+            "installationIdFile": str(installation_file),
+            "baseUrl": "https://chatgpt.com/backend-api/codex",
+            "defaultOriginator": "codex_cli_rs",
+        }
+    )
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    result = provider.generate_image(
+        prompt="blue square",
+        model="gpt-5.4",
+        output_path=str(tmp_path / "out.png"),
+        image="data:image/png;base64,abc123",
+        client=client,
+    )
+    assert result["mode"] == "live"

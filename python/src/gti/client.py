@@ -1,10 +1,39 @@
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from .config import resolve_config
+from .errors import make_error
 from .provider import create_private_codex_provider
+
+_EXTENSION_TO_MIME = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "gif": "image/gif",
+    "webp": "image/webp",
+}
+
+
+def _image_path_to_data_url(image_path: str) -> str:
+    path = Path(image_path)
+    if not path.exists():
+        raise make_error(f"Image file does not exist: {image_path}", code="IMAGE_NOT_FOUND")
+
+    ext = path.suffix.lstrip(".").lower()
+    mime = _EXTENSION_TO_MIME.get(ext)
+    if mime is None:
+        raise make_error(
+            f"Unsupported image extension '.{ext}'. Supported: png, jpg, jpeg, gif, webp.",
+            code="UNSUPPORTED_IMAGE_TYPE",
+        )
+
+    data = path.read_bytes()
+    b64 = base64.b64encode(data).decode("ascii")
+    return f"data:{mime};base64,{b64}"
 
 
 @dataclass
@@ -46,15 +75,18 @@ class Client:
         prompt: str,
         model: str | None = None,
         output_path: str | None = None,
+        image_path: str | None = None,
         dry_run: bool = False,
         debug: bool = False,
         debug_dir: str | None = None,
         client=None,
     ) -> GenerateImageResult:
+        image = _image_path_to_data_url(image_path) if image_path is not None else None
         payload = self.provider.generate_image(
             prompt=prompt,
             model=model or self.config["defaultModel"],
             output_path=output_path or self.config["defaultOutputPath"],
+            image=image,
             dry_run=dry_run,
             debug=debug,
             debug_dir=debug_dir,

@@ -40,6 +40,7 @@ def _redact_secrets(value: Any) -> str:
         (r'"x-codex-installation-id":"[^"]+"', '"x-codex-installation-id":"[REDACTED_INSTALLATION_ID]"'),
         (r'"partial_image_b64":"[^"]+"', '"partial_image_b64":"[REDACTED_IMAGE_B64]"'),
         (r'"result":"[^"]+"', '"result":"[REDACTED_IMAGE_B64]"'),
+        (r'"image_url":"[^"]+"', '"image_url":"[REDACTED_IMAGE_URL]"'),
     ]
     for pattern, replacement in patterns:
         text = re.sub(pattern, replacement, text)
@@ -130,6 +131,7 @@ class PrivateCodexProvider:
         prompt: str,
         model: str,
         output_path: str,
+        image: str | None = None,
         dry_run: bool = False,
         debug: bool = False,
         debug_dir: str | Path | None = None,
@@ -145,6 +147,7 @@ class PrivateCodexProvider:
             prompt=prompt,
             model=model,
             originator=self.config["defaultOriginator"],
+            image=image,
         )
 
         if dry_run:
