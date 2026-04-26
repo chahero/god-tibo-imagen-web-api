@@ -312,7 +312,7 @@ function renderIndex() {
             <div class="meta">\${escapeHtml(item.provider || '')} \${escapeHtml(item.model || '')}<br>\${escapeHtml(formatDate(item.createdAt))}</div>
             \${Array.isArray(item.references) && item.references.length ? \`<div class="meta">References: \${item.references.map((ref, index) => escapeHtml(ref.name || ref.id || \`#\${index + 1}\`)).join(', ')}</div>\` : ''}
             <div class="card-actions">
-              <button type="button" data-use-ref="\${item.id}">Use as reference</button>
+              <button type="button" title="Use as reference" data-use-ref="\${item.id}">Use as ref.</button>
               <button type="button" data-load-prompt="\${escapeHtml(item.prompt)}">Load prompt</button>
               <button class="danger" type="button" data-delete-history="\${item.id}">Delete</button>
             </div>
@@ -344,7 +344,7 @@ function renderIndex() {
             <p class="prompt">\${escapeHtml(item.name)}</p>
             <div class="meta">Saved \${escapeHtml(formatDate(item.createdAt))}\${item.lastUsedAt ? \`<br>Last used \${escapeHtml(formatDate(item.lastUsedAt))}\` : ''}</div>
             <div class="card-actions">
-              <button type="button" data-use-library-ref="\${item.id}">Use</button>
+              <button type="button" title="Use as reference" data-use-library-ref="\${item.id}">Use as ref.</button>
               <button class="danger" type="button" data-delete-reference="\${item.id}">Delete</button>
             </div>
           </div>
