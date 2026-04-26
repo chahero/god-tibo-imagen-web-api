@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 PID_FILE="$APP_DIR/server.pid"
 LOG_DIR="$APP_DIR/logs"
 LOG_FILE="$LOG_DIR/server.log"
@@ -13,7 +13,7 @@ cd "$APP_DIR"
 mkdir -p "$LOG_DIR"
 
 is_running() {
-  [ -f "$PID_FILE" ] && [ -n "$(cat "$PID_FILE")" ] && ps -p "$(cat "$PID_FILE")" > /dev/null 2>&1
+  [ -f "$PID_FILE" ] && PID="$(cat "$PID_FILE")" && [ -n "$PID" ] && ps -p "$PID" > /dev/null 2>&1
 }
 
 install_dependencies() {
@@ -43,7 +43,7 @@ start() {
   install_dependencies
 
   echo "Starting server..."
-  nohup npm run serve -- --host "$HOST" --port "$PORT" > "$LOG_FILE" 2> "$ERROR_LOG" &
+  nohup node src/cli/serve.js --host "$HOST" --port "$PORT" > "$LOG_FILE" 2> "$ERROR_LOG" &
   PID="$!"
   echo "$PID" > "$PID_FILE"
 
