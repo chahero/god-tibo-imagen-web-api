@@ -120,6 +120,8 @@ function renderIndex() {
     summary { cursor: pointer; font-weight: 750; color: #313b49; }
     .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .prompt-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -4px; }
+    .prompt-tools button { padding: 7px 10px; font-size: 12px; }
     .dropzone { display: grid; place-items: center; min-height: 118px; border: 1px dashed #98a6b8; border-radius: 8px; background: #f8fafc; color: #4b596b; text-align: center; padding: 16px; }
     .dropzone.dragover { border-color: #111827; background: #eef2f7; color: #111827; }
     .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
@@ -172,6 +174,9 @@ function renderIndex() {
         </div>
         <form id="generate-form">
           <label>Prompt<textarea name="prompt" required placeholder="Describe the image you want to create"></textarea></label>
+          <div class="prompt-tools">
+            <button id="face-grid-prompt-button" type="button">Face grid</button>
+          </div>
           <label>Reference images</label>
           <div id="dropzone" class="dropzone">
             <div>Drop images here or click to select PNG, JPG, GIF, or WEBP files</div>
@@ -256,6 +261,7 @@ function renderIndex() {
     const promptList = document.querySelector('#prompt-list');
     const refreshButton = document.querySelector('#refresh-button');
     const savePromptButton = document.querySelector('#save-prompt-button');
+    const faceGridPromptButton = document.querySelector('#face-grid-prompt-button');
     const historyTab = document.querySelector('#history-tab');
     const referencesTab = document.querySelector('#references-tab');
     const promptsTab = document.querySelector('#prompts-tab');
@@ -263,9 +269,35 @@ function renderIndex() {
     const referencesPanel = document.querySelector('#references-panel');
     const promptsPanel = document.querySelector('#prompts-panel');
     const references = [];
+    const FACE_GRID_PROMPT = [
+      'Remove the background and edit the provided image.',
+      '',
+      'Add a minimal structured interference pattern to every visible face in the attached image:',
+      '- 4 thin white solid grid lines',
+      '- Evenly distributed across the eyes, nose, and mouth',
+      '- Follow the natural facial contours',
+      '',
+      'Preserve identity and likeness.',
+      'Do not blur the entire face.',
+      'Do not block or censor facial features.',
+      'The face must still look natural to humans.'
+    ].join('\\n');
 
     function setStatus(message) {
       status.textContent = message;
+    }
+
+    function appendPromptFragment(fragment) {
+      const promptField = form.elements.prompt;
+      const currentPrompt = promptField.value.trim();
+      if (currentPrompt.includes(fragment)) {
+        setStatus('Face grid prompt already added');
+        promptField.focus();
+        return false;
+      }
+      promptField.value = currentPrompt ? currentPrompt + '\\n\\n' + fragment : fragment;
+      promptField.focus();
+      return true;
     }
 
     function escapeHtml(value) {
@@ -570,6 +602,12 @@ function renderIndex() {
       });
       await loadPrompts();
       setStatus('Prompt saved');
+    });
+
+    faceGridPromptButton.addEventListener('click', () => {
+      const added = appendPromptFragment(FACE_GRID_PROMPT);
+      if (!added) return;
+      setStatus(references.length ? 'Face grid prompt added' : 'Face grid prompt added. Add a reference image before generating.');
     });
 
     clearHistoryButton.addEventListener('click', async () => {

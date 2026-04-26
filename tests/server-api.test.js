@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
+import vm from 'node:vm';
 
 import { createHttpHandler } from '../src/server/app.js';
 import { createGalleryStore } from '../src/server/store.js';
@@ -129,6 +130,39 @@ test('server rejects missing prompts before calling provider', async () => {
     assert.equal(response.status, 400);
     assert.equal(body.error.code, 'BAD_REQUEST');
     assert.equal(called, false);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('home page includes face grid prompt helper', async () => {
+  const { server, baseUrl } = await listen(createHttpHandler());
+
+  try {
+    const response = await fetch(`${baseUrl}/`);
+    const html = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(html, /id="face-grid-prompt-button"/);
+    assert.match(html, /Face grid/);
+    assert.match(html, /Add a minimal structured interference pattern to every visible face/);
+    assert.match(html, /Face grid prompt added/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('home page renders browser script with valid JavaScript syntax', async () => {
+  const { server, baseUrl } = await listen(createHttpHandler());
+
+  try {
+    const response = await fetch(`${baseUrl}/`);
+    const html = await response.text();
+    const match = html.match(/<script>([\s\S]*)<\/script>/);
+
+    assert.equal(response.status, 200);
+    assert.ok(match, 'expected inline browser script');
+    assert.doesNotThrow(() => new vm.Script(match[1]));
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
