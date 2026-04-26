@@ -272,9 +272,10 @@ function renderIndex() {
     const FACE_GRID_PROMPT = [
       'Remove the background and edit the provided image.',
       '',
-      'Add a minimal structured interference pattern to every visible face in the attached image:',
-      '- 4 thin white solid grid lines',
-      '- Evenly distributed across the eyes, nose, and mouth',
+      'Add exactly 8 thin white solid grid lines to each visible face in the attached image:',
+      '- 4 horizontal lines',
+      '- 4 vertical lines',
+      '- Evenly distributed across the forehead, eyes, nose, mouth, and chin',
       '- Follow the natural facial contours',
       '',
       'Preserve identity and likeness.',

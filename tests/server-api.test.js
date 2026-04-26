@@ -145,7 +145,9 @@ test('home page includes face grid prompt helper', async () => {
     assert.equal(response.status, 200);
     assert.match(html, /id="face-grid-prompt-button"/);
     assert.match(html, /Face grid/);
-    assert.match(html, /Add a minimal structured interference pattern to every visible face/);
+    assert.match(html, /Add exactly 8 thin white solid grid lines to each visible face/);
+    assert.match(html, /4 horizontal lines/);
+    assert.match(html, /4 vertical lines/);
     assert.match(html, /Face grid prompt added/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
