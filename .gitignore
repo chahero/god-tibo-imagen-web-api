@@ -2,6 +2,8 @@
 smoke-output.png
 generated-*.png
 generated_images/
+server.pid
+logs/
 
 # Node
 node_modules/
