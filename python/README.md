@@ -18,7 +18,7 @@ from gti import Client
 client = Client(provider="private-codex")
 result = client.generate_image(
     prompt="flat blue square icon",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./out.png"
 )
 print(result.saved_path)
@@ -32,7 +32,7 @@ You can provide existing images as additional context alongside your text prompt
 # single image
 result = client.generate_image(
     prompt="Make this cat wear a hat",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./cat-hat.png",
     image_paths="./cat.png"
 )
@@ -40,7 +40,7 @@ result = client.generate_image(
 # multiple images
 result = client.generate_image(
     prompt="Combine these two styles",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./combined.png",
     image_paths=["./style-a.png", "./style-b.png"]
 )

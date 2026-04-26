@@ -50,7 +50,7 @@ def resolve_config(overrides: dict | None = None) -> dict[str, str]:
             overrides.get("defaultModel")
             or os.environ.get("CODEX_IMAGEGEN_MODEL")
             or os.environ.get("CODEX_MODEL")
-            or "gpt-5.4"
+            or "gpt-5.5"
         ),
         "defaultOriginator": (
             overrides.get("originator")
@@ -61,6 +61,6 @@ def resolve_config(overrides: dict | None = None) -> dict[str, str]:
         "defaultOutputPath": (
             overrides.get("defaultOutputPath")
             or os.environ.get("CODEX_IMAGEGEN_OUTPUT")
-            or str(Path.cwd() / f"generated-{int(time() * 1000)}.png")
+            or str(Path.cwd() / "generated_images" / f"generated-{int(time() * 1000)}.png")
         ),
     }

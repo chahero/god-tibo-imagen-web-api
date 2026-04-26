@@ -12,7 +12,7 @@ test('private provider saves PNG from successful SSE response', async () => {
   const dir = await makeTempDir();
   const fixture = await writeAuthFixture(dir);
   const outputPath = path.join(dir, 'out.png');
-  const successSse = await fs.readFile(path.join(fixturesDir.pathname, 'success.sse'), 'utf8');
+  const successSse = await fs.readFile(new URL('success.sse', fixturesDir), 'utf8');
 
   const provider = createPrivateCodexProvider({
     baseUrl: 'https://chatgpt.com/backend-api/codex',
@@ -48,7 +48,7 @@ test('private provider forwards image data URL to request builder', async () => 
   const dir = await makeTempDir();
   const fixture = await writeAuthFixture(dir);
   const outputPath = path.join(dir, 'out.png');
-  const successSse = await fs.readFile(path.join(fixturesDir.pathname, 'success.sse'), 'utf8');
+  const successSse = await fs.readFile(new URL('success.sse', fixturesDir), 'utf8');
   const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlAbwAAAABJRU5ErkJggg==';
 
   const provider = createPrivateCodexProvider({
@@ -88,7 +88,7 @@ test('private provider redacts secrets in debug dumps', async () => {
   const fixture = await writeAuthFixture(dir);
   const outputPath = path.join(dir, 'debug-image.png');
   const debugDir = path.join(dir, '.debug');
-  const successSse = await fs.readFile(path.join(fixturesDir.pathname, 'success.sse'), 'utf8');
+  const successSse = await fs.readFile(new URL('success.sse', fixturesDir), 'utf8');
 
   const provider = createPrivateCodexProvider({
     baseUrl: 'https://chatgpt.com/backend-api/codex',

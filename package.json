@@ -15,7 +15,8 @@
   },
   "types": "./types/index.d.ts",
   "bin": {
-    "gti": "./src/cli/generate.js"
+    "gti": "./src/cli/generate.js",
+    "gti-serve": "./src/cli/serve.js"
   },
   "files": [
     "src/",
@@ -27,7 +28,9 @@
     "check": "node scripts/check.js",
     "build": "npm run check && npm run build:types",
     "build:types": "tsc --project tsconfig.types.json",
+    "dev": "node src/cli/serve.js",
     "generate": "node src/cli/generate.js",
+    "serve": "node src/cli/serve.js",
     "smoke:live": "bash scripts/smoke-live.sh",
     "sync-version": "node scripts/sync-version.js"
   },

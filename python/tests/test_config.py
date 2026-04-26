@@ -22,3 +22,21 @@ def test_resolve_config_uses_env_defaults(monkeypatch, tmp_path):
     assert config["defaultModel"] == "model-x"
     assert config["defaultOriginator"] == "origin-x"
     assert config["defaultOutputPath"] == str(tmp_path / "out.png")
+
+
+def test_resolve_config_defaults_to_gpt_55(monkeypatch):
+    monkeypatch.delenv("CODEX_IMAGEGEN_MODEL", raising=False)
+    monkeypatch.delenv("CODEX_MODEL", raising=False)
+
+    config = resolve_config({"defaultOutputPath": "./out.png"})
+
+    assert config["defaultModel"] == "gpt-5.5"
+
+
+def test_resolve_config_uses_generated_images_output_dir(monkeypatch):
+    monkeypatch.delenv("CODEX_IMAGEGEN_OUTPUT", raising=False)
+
+    config = resolve_config()
+
+    assert config["defaultOutputPath"].endswith(".png")
+    assert "generated_images" in config["defaultOutputPath"]

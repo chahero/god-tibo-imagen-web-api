@@ -133,7 +133,7 @@ Usage:
 Options:
   --prompt <text>               Required prompt text
   --output <path>               Output PNG path
-  --model <name>                Model name (default: CODEX_IMAGEGEN_MODEL or gpt-5.4)
+  --model <name>                Model name (default: CODEX_IMAGEGEN_MODEL or gpt-5.5)
   --provider <name>             Provider: private-codex | codex-cli | auto
   --image <path>                Input image path (can be used multiple times)
   --dry-run                     Print the request shape without calling the backend

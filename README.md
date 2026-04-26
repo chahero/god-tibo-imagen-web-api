@@ -2,7 +2,7 @@
   <img src="assets/saint-tibo.png" alt="Saint Tibo" width="600">
 </p>
 
-# god-tibo-imagen
+# got-tibo-imagen-web-api
 
 Node.js library and CLI for sending image-generation requests to Codex's private ChatGPT-authenticated backend path.
 
@@ -115,6 +115,35 @@ gti --prompt "flat blue square icon" --dry-run
 npm run smoke:live -- "Generate a tiny flat blue square icon." ./smoke-output.png
 ```
 
+## Web/API Server
+
+This package can also run as a small local HTTP service. The server wraps the same providers used by the CLI.
+
+```bash
+npm run serve
+# or, after global install:
+gti-serve --host 127.0.0.1 --port 8787
+```
+
+Endpoints:
+
+- `GET /` — simple browser UI
+- `GET /health` — health check
+- `POST /api/generate` — generate an image
+- `GET /api/image?path=...` — serve generated images from this project directory for the browser viewer
+
+Example API call:
+
+```bash
+curl -X POST http://127.0.0.1:8787/api/generate \
+  -H "content-type: application/json" \
+  -d '{"prompt":"flat blue square icon","provider":"auto","outputPath":"./out.png"}'
+```
+
+The server still depends on the same local Codex ChatGPT auth state and unsupported private backend behavior as the CLI.
+The browser UI shows the generated image when the saved output path is inside the project directory.
+When `outputPath` is omitted, generated PNG files are saved under `generated_images/` instead of the repository root.
+
 ## Programmatic API (Node.js)
 
 ```javascript
@@ -125,7 +154,7 @@ const provider = createProvider(config);
 
 const result = await provider.generateImage({
   prompt: 'flat blue square icon',
-  model: 'gpt-5.4',
+  model: 'gpt-5.5',
   outputPath: './out.png',
   dryRun: false,
   debug: false
@@ -140,7 +169,7 @@ You can also pass existing images as input:
 // single image
 const result = await provider.generateImage({
   prompt: 'Make this cat wear a hat',
-  model: 'gpt-5.4',
+  model: 'gpt-5.5',
   outputPath: './cat-hat.png',
   images: ['data:image/png;base64,iVBORw0KGgo...']
 });
@@ -148,7 +177,7 @@ const result = await provider.generateImage({
 // multiple images
 const result = await provider.generateImage({
   prompt: 'Combine these two styles',
-  model: 'gpt-5.4',
+  model: 'gpt-5.5',
   outputPath: './combined.png',
   images: [
     'data:image/png;base64,abc...',
@@ -165,7 +194,7 @@ from gti import Client
 client = Client(provider="private-codex")
 result = client.generate_image(
     prompt="flat blue square icon",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./out.png"
 )
 print(result.saved_path)
@@ -177,7 +206,7 @@ You can also pass existing images as input:
 # single image
 result = client.generate_image(
     prompt="Make this cat wear a hat",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./cat-hat.png",
     image_paths="./cat.png"
 )
@@ -185,7 +214,7 @@ result = client.generate_image(
 # multiple images
 result = client.generate_image(
     prompt="Combine these two styles",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./combined.png",
     image_paths=["./style-a.png", "./style-b.png"]
 )
@@ -211,7 +240,7 @@ const provider = createProvider(config);
 
 const result = await provider.generateImage({
   prompt: 'flat blue square icon',
-  model: 'gpt-5.4',
+  model: 'gpt-5.5',
   outputPath: './out.png',
 });
 
@@ -226,7 +255,7 @@ from gti import Client
 client = Client(provider="private-codex")
 result = client.generate_image(
     prompt="flat blue square icon",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./out.png"
 )
 print(result.saved_path)
@@ -237,7 +266,7 @@ With image inputs:
 ```python
 result = client.generate_image(
     prompt="Make this cat wear a hat",
-    model="gpt-5.4",
+    model="gpt-5.5",
     output_path="./cat-hat.png",
     image_paths="./cat.png"
 )

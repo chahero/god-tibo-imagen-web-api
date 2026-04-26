@@ -5,6 +5,7 @@ import path from 'node:path';
 import { PRIVATE_CODEX_PROVIDER } from './providers/providerTypes.js';
 
 const DEFAULT_CODEX_HOME = path.join(os.homedir(), '.codex');
+const DEFAULT_GENERATED_OUTPUT_DIR = path.resolve(process.cwd(), 'generated_images');
 
 /**
  * Resolve the runtime configuration for the CLI/library.
@@ -32,13 +33,13 @@ export function resolveConfig(overrides = {}) {
     installationIdFile,
     generatedImagesDir,
     provider: overrides.provider || process.env.CODEX_IMAGEGEN_PROVIDER || PRIVATE_CODEX_PROVIDER,
-    defaultModel: overrides.defaultModel || process.env.CODEX_IMAGEGEN_MODEL || process.env.CODEX_MODEL || 'gpt-5.4',
+    defaultModel: overrides.defaultModel || process.env.CODEX_IMAGEGEN_MODEL || process.env.CODEX_MODEL || 'gpt-5.5',
     defaultOriginator:
       overrides.originator || process.env.CODEX_IMAGEGEN_ORIGINATOR || process.env.CODEX_INTERNAL_ORIGINATOR_OVERRIDE || 'codex_cli_rs',
     defaultOutputPath:
       overrides.defaultOutputPath ||
       process.env.CODEX_IMAGEGEN_OUTPUT ||
-      path.resolve(process.cwd(), `generated-${Date.now()}.png`)
+      path.join(DEFAULT_GENERATED_OUTPUT_DIR, `generated-${Date.now()}.png`)
   };
 }
 

@@ -12,7 +12,7 @@ test('private provider classifies 401 responses', async () => {
   const dir = await makeTempDir();
   const fixture = await writeAuthFixture(dir);
   const outputPath = path.join(dir, 'out.png');
-  const unauthorizedBody = await fs.readFile(path.join(fixturesDir.pathname, 'unauthorized.json'), 'utf8');
+  const unauthorizedBody = await fs.readFile(new URL('unauthorized.json', fixturesDir), 'utf8');
 
   const provider = createPrivateCodexProvider({
     baseUrl: 'https://chatgpt.com/backend-api/codex',
