@@ -54,15 +54,7 @@ export function createGalleryStore({ rootDir, storeDir }?: {
     addReference({ name, dataUrl }: {
         name: any;
         dataUrl: any;
-    }): Promise<{
-        id: string;
-        name: string;
-        savedPath: any;
-        imageUrl: string | null;
-        contentType: string;
-        createdAt: string;
-        lastUsedAt: null;
-    }>;
+    }): Promise<any>;
     getReference(id: any): Promise<any>;
     touchReferences(ids: any): Promise<any[]>;
     deleteReference(id: any): Promise<any>;

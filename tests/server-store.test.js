@@ -106,6 +106,25 @@ test('gallery store saves reusable reference images', async () => {
   await assert.rejects(fs.stat(saved.savedPath), { code: 'ENOENT' });
 });
 
+test('gallery store reuses matching reference images', async () => {
+  const { store } = await makeTempStore();
+  const first = await store.addReference({
+    name: 'style.png',
+    dataUrl: `data:image/png;base64,${PNG_BASE64}`
+  });
+  const second = await store.addReference({
+    name: 'same-style.png',
+    dataUrl: `data:image/png;base64,${PNG_BASE64}`
+  });
+
+  assert.equal(second.id, first.id);
+  assert.equal(second.savedPath, first.savedPath);
+  assert.ok(first.contentHash);
+  const references = await store.listReferences();
+  assert.equal(references.length, 1);
+  assert.equal(references[0].id, first.id);
+});
+
 test('gallery store persists saved prompts', async () => {
   const { store } = await makeTempStore();
   const saved = await store.addPrompt({ title: 'Icon prompt', prompt: 'flat icon with sharp edges' });

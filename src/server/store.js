@@ -24,6 +24,10 @@ function createId(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
 }
 
+function hashBuffer(buffer) {
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
 function resolveInside(baseDir, targetPath) {
   const base = path.resolve(baseDir);
   const resolved = path.resolve(targetPath);
@@ -297,6 +301,33 @@ export function createGalleryStore({
     async addReference({ name, dataUrl }) {
       const parsed = parseImageDataUrl(dataUrl);
       const payload = await readReferencesPayload();
+      const contentHash = hashBuffer(parsed.buffer);
+      let migrated = false;
+      for (const item of payload.items) {
+        if (item.contentHash === contentHash && item.contentType === parsed.contentType) {
+          return item;
+        }
+        if (!item.contentHash && item.savedPath && resolveInside(referencesDir, item.savedPath)) {
+          try {
+            const existingBuffer = await fs.readFile(path.resolve(item.savedPath));
+            const existingHash = hashBuffer(existingBuffer);
+            if (existingHash === contentHash && item.contentType === parsed.contentType) {
+              item.contentHash = existingHash;
+              await writeReferencesPayload(payload);
+              return item;
+            }
+            item.contentHash = existingHash;
+            migrated = true;
+          } catch (error) {
+            if (error?.code !== 'ENOENT') {
+              throw error;
+            }
+          }
+        }
+      }
+      if (migrated) {
+        await writeReferencesPayload(payload);
+      }
       const id = createId('ref');
       const safeName = name && String(name).trim() ? String(name).trim() : `reference.${parsed.extension}`;
       const savedPath = path.join(referencesDir, `${id}.${parsed.extension}`);
@@ -308,6 +339,7 @@ export function createGalleryStore({
         savedPath,
         imageUrl: this.buildImageUrl(savedPath),
         contentType: parsed.contentType,
+        contentHash,
         createdAt: nowIso(),
         lastUsedAt: null
       };

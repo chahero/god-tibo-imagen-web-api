@@ -124,16 +124,21 @@ function renderIndex() {
     .dropzone.dragover { border-color: #111827; background: #eef2f7; color: #111827; }
     .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
     .thumb { position: relative; overflow: hidden; border: 1px solid #d8e0eb; border-radius: 8px; background: #f7f9fc; }
-    .thumb img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .thumb img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; cursor: zoom-in; }
     .thumb button { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border-color: rgba(160,35,35,.35); border-radius: 999px; background: rgba(255,255,255,.94); color: #b42323; font-size: 14px; font-weight: 900; line-height: 1; }
     .ref-index { position: absolute; left: 6px; top: 6px; min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 999px; background: rgba(17,24,39,.92); color: #fff; font-size: 12px; font-weight: 800; }
-    .result-frame { display: grid; place-items: center; min-height: 420px; border: 1px solid #d8e0eb; border-radius: 8px; background: #f8fafc; overflow: hidden; }
-    .result-frame img { display: none; width: 100%; height: auto; max-height: 68vh; object-fit: contain; }
+    .result-frame { display: grid; place-items: center; min-height: 280px; max-height: 430px; border: 1px solid #d8e0eb; border-radius: 8px; background: #f8fafc; overflow: hidden; }
+    .result-frame img { display: none; width: auto; max-width: 100%; max-height: 430px; object-fit: contain; cursor: zoom-in; }
+    .image-dialog { width: min(1180px, calc(100vw - 32px)); max-width: none; max-height: calc(100vh - 32px); padding: 0; border: 0; border-radius: 8px; background: #0f1722; overflow: hidden; }
+    .image-dialog::backdrop { background: rgba(10, 15, 25, .76); }
+    .image-dialog-bar { display: flex; justify-content: flex-end; padding: 8px; background: #0f1722; }
+    .image-dialog-bar button { border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; }
+    .image-dialog img { display: block; width: 100%; max-height: calc(100vh - 88px); object-fit: contain; background: #0f1722; }
     .tabs { display: flex; gap: 8px; margin: 18px 0 12px; }
     .tabs button.active { border-color: #111827; background: #111827; color: #fff; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
     .card { border: 1px solid #d8e0eb; border-radius: 8px; overflow: hidden; background: #fff; }
-    .card img { width: 100%; aspect-ratio: 1.25; object-fit: cover; background: #f4f6f9; }
+    .card img { width: 100%; aspect-ratio: 1.25; object-fit: cover; background: #f4f6f9; cursor: zoom-in; }
     .card-body { display: grid; gap: 8px; padding: 10px; }
     .prompt { margin: 0; color: #263241; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
     .meta { color: #6b7788; font-size: 12px; }
@@ -189,10 +194,15 @@ function renderIndex() {
         <div class="panel-title">
           <h2>Latest result</h2>
         </div>
-        <div class="result-frame"><img id="generated-image" alt="Generated image"></div>
+        <div class="result-frame"><img id="generated-image" alt="Generated image" title="Click to enlarge"></div>
         <pre id="result">{}</pre>
       </section>
     </div>
+
+    <dialog id="image-dialog" class="image-dialog" aria-label="Generated image preview">
+      <div class="image-dialog-bar"><button id="image-dialog-close" type="button">Close</button></div>
+      <img id="image-dialog-image" alt="Generated image preview">
+    </dialog>
 
     <div class="tabs">
       <button class="active" id="history-tab" type="button">History</button>
@@ -227,6 +237,9 @@ function renderIndex() {
     const status = document.querySelector('#status');
     const result = document.querySelector('#result');
     const image = document.querySelector('#generated-image');
+    const imageDialog = document.querySelector('#image-dialog');
+    const imageDialogImage = document.querySelector('#image-dialog-image');
+    const imageDialogClose = document.querySelector('#image-dialog-close');
     const generateButton = document.querySelector('#generate-button');
     const dropzone = document.querySelector('#dropzone');
     const imagePicker = document.querySelector('#image-picker');
@@ -277,16 +290,29 @@ function renderIndex() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ name: file.name, dataUrl })
         });
-        references.push({ id: saved.id, name: saved.name, dataUrl, imageUrl: saved.imageUrl, source: 'library' });
+        addReferenceSelection({ id: saved.id, name: saved.name, dataUrl, imageUrl: saved.imageUrl, source: 'library' });
       }
-      renderReferences();
       await loadReferences();
+    }
+
+    function addReferenceSelection(ref) {
+      if (ref.id && references.some((item) => item.id === ref.id)) {
+        renderReferences();
+        return false;
+      }
+      if (!ref.id && references.some((item) => item.dataUrl === ref.dataUrl)) {
+        renderReferences();
+        return false;
+      }
+      references.push(ref);
+      renderReferences();
+      return true;
     }
 
     function renderReferences() {
       referenceList.innerHTML = references.map((ref, index) => \`
         <div class="thumb">
-          <img src="\${ref.dataUrl}" alt="\${escapeHtml(ref.name)}">
+          <img src="\${ref.dataUrl}" alt="\${escapeHtml(ref.name)}" title="Click to enlarge" data-preview-src="\${ref.dataUrl}">
           <span class="ref-index" title="Reference image \${index + 1}">\${index + 1}</span>
           <button type="button" data-remove-ref="\${index}" title="Remove reference image \${index + 1}" aria-label="Remove reference image \${index + 1}">X</button>
         </div>
@@ -306,7 +332,7 @@ function renderIndex() {
       const body = await api('/api/history');
       historyGrid.innerHTML = body.items.length ? body.items.map((item) => \`
         <article class="card">
-          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.prompt)}">\` : ''}
+          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.prompt)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}">\` : ''}
           <div class="card-body">
             <p class="prompt">\${escapeHtml(item.prompt)}</p>
             <div class="meta">\${escapeHtml(item.provider || '')} \${escapeHtml(item.model || '')}<br>\${escapeHtml(formatDate(item.createdAt))}</div>
@@ -339,7 +365,7 @@ function renderIndex() {
       const body = await api('/api/references');
       referenceGrid.innerHTML = body.items.length ? body.items.map((item) => \`
         <article class="card">
-          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.name)}">\` : ''}
+          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.name)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}">\` : ''}
           <div class="card-body">
             <p class="prompt">\${escapeHtml(item.name)}</p>
             <div class="meta">Saved \${escapeHtml(formatDate(item.createdAt))}\${item.lastUsedAt ? \`<br>Last used \${escapeHtml(formatDate(item.lastUsedAt))}\` : ''}</div>
@@ -372,7 +398,12 @@ function renderIndex() {
       imagePicker.value = '';
     });
     referenceList.addEventListener('click', (event) => {
+      const previewImage = event.target.closest('[data-preview-src]');
       const button = event.target.closest('[data-remove-ref]');
+      if (previewImage) {
+        openImageDialog(previewImage.dataset.previewSrc);
+        return;
+      }
       if (!button) return;
       references.splice(Number(button.dataset.removeRef), 1);
       renderReferences();
@@ -380,6 +411,22 @@ function renderIndex() {
     clearReferencesButton.addEventListener('click', () => {
       references.splice(0, references.length);
       renderReferences();
+    });
+    function openImageDialog(src) {
+      if (!src) return;
+      imageDialogImage.src = src;
+      if (typeof imageDialog.showModal === 'function') {
+        imageDialog.showModal();
+      }
+    }
+
+    image.addEventListener('click', () => {
+      if (!image.src || image.style.display === 'none') return;
+      openImageDialog(image.src);
+    });
+    imageDialogClose.addEventListener('click', () => imageDialog.close());
+    imageDialog.addEventListener('click', (event) => {
+      if (event.target === imageDialog) imageDialog.close();
     });
 
     form.addEventListener('submit', async (event) => {
@@ -422,15 +469,19 @@ function renderIndex() {
     });
 
     historyGrid.addEventListener('click', async (event) => {
+      const previewImage = event.target.closest('[data-preview-src]');
       const refButton = event.target.closest('[data-use-ref]');
       const promptButton = event.target.closest('[data-load-prompt]');
       const deleteButton = event.target.closest('[data-delete-history]');
+      if (previewImage) {
+        openImageDialog(previewImage.dataset.previewSrc);
+        return;
+      }
       if (refButton) {
         setStatus('Loading reference image...');
         const body = await api('/api/image-data?id=' + encodeURIComponent(refButton.dataset.useRef));
-        references.push({ name: body.filename, dataUrl: body.dataUrl });
-        renderReferences();
-        setStatus('Reference image added');
+        const added = addReferenceSelection({ name: body.filename, dataUrl: body.dataUrl });
+        setStatus(added ? 'Reference image added' : 'Reference image already selected');
       }
       if (promptButton) {
         form.elements.prompt.value = promptButton.dataset.loadPrompt;
@@ -444,14 +495,18 @@ function renderIndex() {
     });
 
     referenceGrid.addEventListener('click', async (event) => {
+      const previewImage = event.target.closest('[data-preview-src]');
       const useButton = event.target.closest('[data-use-library-ref]');
       const deleteButton = event.target.closest('[data-delete-reference]');
+      if (previewImage) {
+        openImageDialog(previewImage.dataset.previewSrc);
+        return;
+      }
       if (useButton) {
         setStatus('Loading saved reference...');
         const body = await api('/api/reference-data?id=' + encodeURIComponent(useButton.dataset.useLibraryRef));
-        references.push({ id: body.id, name: body.filename, dataUrl: body.dataUrl, imageUrl: body.imageUrl, source: 'library' });
-        renderReferences();
-        setStatus('Saved reference added');
+        const added = addReferenceSelection({ id: body.id, name: body.filename, dataUrl: body.dataUrl, imageUrl: body.imageUrl, source: 'library' });
+        setStatus(added ? 'Saved reference added' : 'Saved reference already selected');
       }
       if (deleteButton) {
         await api('/api/references/' + encodeURIComponent(deleteButton.dataset.deleteReference), { method: 'DELETE' });
