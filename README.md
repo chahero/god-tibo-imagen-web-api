@@ -8,6 +8,13 @@ Node.js library and CLI for sending image-generation requests to Codex's private
 
 > WARNING: This is **not** a supported public API integration. It depends on private Codex request behavior that may change without notice.
 
+## Changes in this web API repo
+
+- Adds a local HTTP server with a small browser UI via `gti-serve` or `npm run serve`
+- Exposes `POST /api/generate` for image generation and `GET /api/image?path=...` for viewing generated files
+- Saves default server-generated images under `generated_images/` instead of the repository root
+- Keeps the existing Node CLI/library and Python SDK behavior available
+
 ## What it does
 
 - Reuses local Codex ChatGPT auth from `~/.codex/auth.json`
