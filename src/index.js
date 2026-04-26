@@ -17,6 +17,7 @@ export { createProvider } from './providers/createProvider.js';
 export { createPrivateCodexProvider } from './providers/privateCodexProvider.js';
 export { createCodexCliProvider } from './providers/codexCliProvider.js';
 export { createHttpHandler } from './server/app.js';
+export { createGalleryStore } from './server/store.js';
 export {
   PRIVATE_CODEX_PROVIDER,
   CODEX_CLI_PROVIDER,

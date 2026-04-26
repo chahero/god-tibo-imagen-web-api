@@ -8,11 +8,17 @@ Node.js library and CLI for sending image-generation requests to Codex's private
 
 > WARNING: This is **not** a supported public API integration. It depends on private Codex request behavior that may change without notice.
 
+<p align="center">
+  <img src="assets/got-tibo-imagen-web-api-screenshot1.png" alt="got-tibo-imagen-web-api browser UI screenshot" width="900">
+</p>
+
 ## Changes in this web API repo
 
 - Adds a local HTTP server with a small browser UI via `gti-serve` or `npm run serve`
 - Exposes `POST /api/generate` for image generation and `GET /api/image?path=...` for viewing generated files
 - Saves default server-generated images under `generated_images/` instead of the repository root
+- Adds browser-only history, saved prompts, drag-and-drop reference images, and previous-image reuse without a database
+- Saves uploaded reference images in a reusable local reference library
 - Keeps the existing Node CLI/library and Python SDK behavior available
 
 ## What it does
@@ -139,6 +145,19 @@ Endpoints:
 - `POST /api/generate` — generate an image
 - `GET /api/image?path=...` — serve generated images from this project directory for the browser viewer
 
+Additional browser convenience endpoints:
+
+- `GET /api/history` - list generated image history
+- `GET /api/image-data?id=...` - load a generated image as a reference-image data URL
+- `DELETE /api/history/:id` - delete a generated image history entry and its local generated file when safe
+- `GET /api/prompts` - list saved prompts
+- `POST /api/prompts` - save a reusable prompt
+- `DELETE /api/prompts/:id` - delete a saved prompt
+- `GET /api/references` - list uploaded reference images
+- `POST /api/references` - save an uploaded reference image
+- `GET /api/reference-data?id=...` - load a saved reference image as a data URL
+- `DELETE /api/references/:id` - delete a saved reference image
+
 Example API call:
 
 ```bash
@@ -150,6 +169,8 @@ curl -X POST http://127.0.0.1:8787/api/generate \
 The server still depends on the same local Codex ChatGPT auth state and unsupported private backend behavior as the CLI.
 The browser UI shows the generated image when the saved output path is inside the project directory.
 When `outputPath` is omitted, generated PNG files are saved under `generated_images/` instead of the repository root.
+The web UI stores local history in `generated_images/index.json` and saved prompts in `generated_images/prompts.json`.
+Uploaded reference images are stored under `generated_images/references/` with metadata in `generated_images/references.json`.
 
 ## Programmatic API (Node.js)
 

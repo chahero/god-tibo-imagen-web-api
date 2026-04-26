@@ -59,6 +59,16 @@ async function main() {
   }
 
   const server = http.createServer(createHttpHandler());
+  server.on('error', (error) => {
+    if (error?.code === 'EADDRINUSE') {
+      console.error(`Port ${args.port} is already in use on ${args.host}.`);
+      console.error(`Open http://${args.host}:${args.port} if the server is already running, or start with --port <other-port>.`);
+      process.exitCode = 1;
+      return;
+    }
+    console.error(error?.stack || error?.message || String(error));
+    process.exitCode = 1;
+  });
   server.listen(args.port, args.host, () => {
     console.log(`got-tibo-imagen-web-api server listening at http://${args.host}:${args.port}`);
   });

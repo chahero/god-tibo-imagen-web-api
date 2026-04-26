@@ -6,6 +6,7 @@ export { createProvider } from "./providers/createProvider.js";
 export { createPrivateCodexProvider } from "./providers/privateCodexProvider.js";
 export { createCodexCliProvider } from "./providers/codexCliProvider.js";
 export { createHttpHandler } from "./server/app.js";
+export { createGalleryStore } from "./server/store.js";
 export { resolveConfig, UNSUPPORTED_WARNING } from "./config.js";
 export { REDACTED_ACCOUNT_ID, REDACTED_SESSION_ID, REDACTED_INSTALLATION_ID, buildResponsesRequest, sanitizeHeaders, sanitizeRequestBody } from "./codex/buildResponsesRequest.js";
 export { parseSseText, summarizeEvents } from "./codex/streamResponsesSse.js";
