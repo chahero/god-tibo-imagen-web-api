@@ -127,8 +127,11 @@ function renderIndex() {
     .thumb img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; cursor: zoom-in; }
     .thumb button { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border-color: rgba(160,35,35,.35); border-radius: 999px; background: rgba(255,255,255,.94); color: #b42323; font-size: 14px; font-weight: 900; line-height: 1; }
     .ref-index { position: absolute; left: 6px; top: 6px; min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 999px; background: rgba(17,24,39,.92); color: #fff; font-size: 12px; font-weight: 800; }
+    .image-wrap { position: relative; }
+    .image-dim { position: absolute; left: 6px; bottom: 6px; border-radius: 999px; padding: 3px 7px; background: rgba(17,24,39,.86); color: #fff; font-size: 11px; font-weight: 800; line-height: 1.2; }
     .result-frame { display: grid; place-items: center; min-height: 280px; max-height: 430px; border: 1px solid #d8e0eb; border-radius: 8px; background: #f8fafc; overflow: hidden; }
     .result-frame img { display: none; width: auto; max-width: 100%; max-height: 430px; object-fit: contain; cursor: zoom-in; }
+    .result-meta { margin-top: 8px; min-height: 17px; }
     .image-dialog { width: min(1180px, calc(100vw - 32px)); max-width: none; max-height: calc(100vh - 32px); padding: 0; border: 0; border-radius: 8px; background: #0f1722; overflow: hidden; }
     .image-dialog::backdrop { background: rgba(10, 15, 25, .76); }
     .image-dialog-bar { display: flex; justify-content: flex-end; padding: 8px; background: #0f1722; }
@@ -195,6 +198,7 @@ function renderIndex() {
           <h2>Latest result</h2>
         </div>
         <div class="result-frame"><img id="generated-image" alt="Generated image" title="Click to enlarge"></div>
+        <div id="generated-image-meta" class="meta result-meta"></div>
         <pre id="result">{}</pre>
       </section>
     </div>
@@ -237,6 +241,7 @@ function renderIndex() {
     const status = document.querySelector('#status');
     const result = document.querySelector('#result');
     const image = document.querySelector('#generated-image');
+    const generatedImageMeta = document.querySelector('#generated-image-meta');
     const imageDialog = document.querySelector('#image-dialog');
     const imageDialogImage = document.querySelector('#image-dialog-image');
     const imageDialogClose = document.querySelector('#image-dialog-close');
@@ -270,6 +275,21 @@ function renderIndex() {
     function formatDate(value) {
       if (!value) return '';
       return new Date(value).toLocaleString();
+    }
+
+    function formatDimensions(img) {
+      return img.naturalWidth && img.naturalHeight ? \`\${img.naturalWidth} x \${img.naturalHeight}\` : '';
+    }
+
+    function hydrateImageDimensions(root) {
+      root.querySelectorAll('img[data-show-dim]').forEach((img) => {
+        const label = img.parentElement?.querySelector('.image-dim');
+        const update = () => {
+          if (label) label.textContent = formatDimensions(img);
+        };
+        img.addEventListener('load', update, { once: true });
+        if (img.complete) update();
+      });
     }
 
     function readFileAsDataUrl(file) {
@@ -312,11 +332,13 @@ function renderIndex() {
     function renderReferences() {
       referenceList.innerHTML = references.map((ref, index) => \`
         <div class="thumb">
-          <img src="\${ref.dataUrl}" alt="\${escapeHtml(ref.name)}" title="Click to enlarge" data-preview-src="\${ref.dataUrl}">
+          <img src="\${ref.dataUrl}" alt="\${escapeHtml(ref.name)}" title="Click to enlarge" data-preview-src="\${ref.dataUrl}" data-show-dim>
           <span class="ref-index" title="Reference image \${index + 1}">\${index + 1}</span>
+          <span class="image-dim"></span>
           <button type="button" data-remove-ref="\${index}" title="Remove reference image \${index + 1}" aria-label="Remove reference image \${index + 1}">X</button>
         </div>
       \`).join('');
+      hydrateImageDimensions(referenceList);
     }
 
     async function api(path, options) {
@@ -332,7 +354,7 @@ function renderIndex() {
       const body = await api('/api/history');
       historyGrid.innerHTML = body.items.length ? body.items.map((item) => \`
         <article class="card">
-          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.prompt)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}">\` : ''}
+          \${item.imageUrl ? \`<div class="image-wrap"><img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.prompt)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}" data-show-dim><span class="image-dim"></span></div>\` : ''}
           <div class="card-body">
             <p class="prompt">\${escapeHtml(item.prompt)}</p>
             <div class="meta">\${escapeHtml(item.provider || '')} \${escapeHtml(item.model || '')}<br>\${escapeHtml(formatDate(item.createdAt))}</div>
@@ -345,6 +367,7 @@ function renderIndex() {
           </div>
         </article>
       \`).join('') : '<div class="meta">No generated images yet.</div>';
+      hydrateImageDimensions(historyGrid);
     }
 
     async function loadPrompts() {
@@ -365,7 +388,7 @@ function renderIndex() {
       const body = await api('/api/references');
       referenceGrid.innerHTML = body.items.length ? body.items.map((item) => \`
         <article class="card">
-          \${item.imageUrl ? \`<img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.name)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}">\` : ''}
+          \${item.imageUrl ? \`<div class="image-wrap"><img src="\${item.imageUrl}&t=\${Date.now()}" alt="\${escapeHtml(item.name)}" title="Click to enlarge" data-preview-src="\${escapeHtml(item.imageUrl)}" data-show-dim><span class="image-dim"></span></div>\` : ''}
           <div class="card-body">
             <p class="prompt">\${escapeHtml(item.name)}</p>
             <div class="meta">Saved \${escapeHtml(formatDate(item.createdAt))}\${item.lastUsedAt ? \`<br>Last used \${escapeHtml(formatDate(item.lastUsedAt))}\` : ''}</div>
@@ -376,6 +399,7 @@ function renderIndex() {
           </div>
         </article>
       \`).join('') : '<div class="meta">No uploaded reference images yet.</div>';
+      hydrateImageDimensions(referenceGrid);
     }
 
     async function refreshAll() {
@@ -424,6 +448,9 @@ function renderIndex() {
       if (!image.src || image.style.display === 'none') return;
       openImageDialog(image.src);
     });
+    image.addEventListener('load', () => {
+      generatedImageMeta.textContent = formatDimensions(image);
+    });
     imageDialogClose.addEventListener('click', () => imageDialog.close());
     imageDialog.addEventListener('click', (event) => {
       if (event.target === imageDialog) imageDialog.close();
@@ -436,6 +463,7 @@ function renderIndex() {
       result.textContent = '{}';
       image.style.display = 'none';
       image.removeAttribute('src');
+      generatedImageMeta.textContent = '';
       try {
         const data = Object.fromEntries(new FormData(form).entries());
         for (const key of Object.keys(data)) {
